@@ -31,8 +31,27 @@ datatype ExprC =
     | IdC of { id: string }
     | StrC of { s: string }
     | IfC of { cond: ExprC, thenBody: ExprC, elseBody: ExprC }
-    | LamC of { params: string list}
+    | LamC of { params: string list, body: ExprC}
     | AppC of { f: ExprC, args : ExprC list}
+
+(* Useful short hand constructors to make ExprC's with less writing
+    ex:
+        numC 3.0
+    is faster than
+        NumC { n = 3.0 }
+    and  
+        (ifC (idC "true", strC "hello", numC 5.0))
+    is alot faster than
+        IfC { cond = IdC { id = "true"},
+            thenBody = StrC { s = "hello" },
+            elseBody = NumC { n = 5.0 }  })
+    *)
+fun numC n = NumC { n = n }
+fun idC id = IdC { id = id }
+fun strC s = StrC { s = s }
+fun ifC (cond, thenBody, elseBody) = IfC { cond = cond, thenBody = thenBody, elseBody = elseBody }
+fun lamC (params, body)  = LamC { params = params, body = body }
+fun appC (f, args)  = AppC { f = f, args = args }
 
 datatype Value = 
     NumV of real

@@ -24,6 +24,11 @@ val _ = assert ("StrC evaluation",
                  checkValEqual (interp (StrC { s = "hello" }) [], StrV "hello"));
 val _ = assert ("BoolC evaluation", 
                  checkValEqual (interp (IdC { id = "true" }) top_env, BoolV true));
+val _ = assert ("IfC evaluation - true branch", 
+                 checkValEqual (interp (ifC (idC "true", strC "hello", numC 5.0)) top_env, StrV "hello"));
+
+val _ = assert ("IfC evaluation - false branch", 
+                 checkValEqual (interp (ifC (idC "false", strC "hello", numC 5.0)) top_env, NumV 5.0));
 
 
 (* Make sure all tests are before 'end' *)
