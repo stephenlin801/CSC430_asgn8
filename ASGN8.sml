@@ -6,16 +6,33 @@
 functions representing the primitive types. In addition, I started the interp creating the lookup helper 
 function and the pattern matches for NumC, StrC, IdC, and IfC *)
 
+(* 
+To compile and run code:
+    1. Install SML-NJ from https://www.smlnj.org/dist/working/110.99.9/index.html
+    2. Run it according to instuctions on page and your OS
+    3. Make sure you are in the folder of the project, and if you type:
+        'CM.make "sources.cm";'
+        into the terminal then it will compile and run the code with the tests
+    4. Additionally, once you do that, you should be able to use the command line to run commands
+        and call functions of the program 
+    5. Let me (Tyler) know if you have any questions
+*)
+
+structure ASGN8 =
+struct
+(* Make sure all code goes in here so it can be compiled and accessed by testing file *)
+
+
 val reserved = ["if", "=", "given", "fn", "->", "do"]
 
 (* datatype definitions for the VEBG4 AST *)
 datatype ExprC = 
     NumC of { n: real }
-    | IdC of { i: string }
+    | IdC of { id: string }
     | StrC of { s: string }
-    | IfC of { a: ExprC, b: ExprC, c: ExprC }
-    | LamC of { p: string list}
-    | AppC of { f: ExprC, a : ExprC list}
+    | IfC of { cond: ExprC, thenBody: ExprC, elseBody: ExprC }
+    | LamC of { params: string list}
+    | AppC of { f: ExprC, args : ExprC list}
 
 datatype Value = 
     NumV of real
@@ -32,7 +49,7 @@ val top_env = [
                         | _ => raise Fail "VEBG: - called incorrectly" }),
     ("*", PrimV { f = fn [NumV a, NumV b] => NumV (a * b)
                         | _ => raise Fail "VEBG: * called incorrectly" }),
-    ("/", PrimV { f = fn [NumV a, NumV b] => if b = 0.0
+    ("/", PrimV { f = fn [NumV a, NumV b] => if Real.==(b, 0.0)
                                                 then raise Fail "VEBG: division by zero"
                                                 else NumV (a / b)
                         | _ => raise Fail "VEBG: / called incorrectly" }),
@@ -44,11 +61,11 @@ val top_env = [
                         | _ => raise Fail "VEBG: substring called incorrectly" }),
     ("strlen", PrimV { f = fn [StrV s] => NumV (real (String.size s))
                         | _ => raise Fail "VEBG: strlen called incorrectly" }),
-    ("equal?", PrimV { f = fn [NumV a, NumV b] => BoolV (a = b)
+    ("equal?", PrimV { f = fn [NumV a, NumV b] => BoolV (Real.==(a, b))
                         | [StrV a, StrV b] => BoolV (a = b)
                         | [BoolV a, BoolV b] => BoolV (a = b)
                         | [_, _] => BoolV false
-                        | _ raise Fail "VEBG: equal? called incorrectly" }),
+                        | _ => raise Fail "VEBG: equal? called incorrectly" }),
     ("true", BoolV true),
     ("false", BoolV false),
     ("error", PrimV { f = fn [StrV s] => raise Fail s
@@ -67,13 +84,13 @@ fun lookup (id : string) [] = raise Fail "VEBG: name not found"
 case representing a variation of interp and what the output would be given the env *)
 fun interp (NumC { n = n }) env = NumV n
     | interp (StrC { s = s }) env = StrV s
-    | interp (IdC { i = i }) env = lookup i env
-    | interp (IfC { a = a, b = b, c = c }) env = case interp a env of
-                                                    BoolV true => interp b env
-                                                    | BoolV false => interp c env
+    | interp (IdC { id = id }) env = lookup id env
+    | interp (IfC { cond = cond, thenBody = thenBody, elseBody = elseBody }) env = case interp cond env of
+                                                    BoolV true => interp thenBody env
+                                                    | BoolV false => interp elseBody env
                                                     | _ => raise Fail "VEBG: interp, need boolean for if"
-    | interp (LamC { p = p }) env = 
-    | interp (AppC { f = f, a = a}) env = 
+    (* | interp (LamC { params = params }) env = 
+    | interp (AppC { f = f, args = aargs}) env =  *)
 
 
 
@@ -114,3 +131,6 @@ interp logic is based off the racket code below if it helps
                      [result (interp b env)]
                      [else (interp c env)]))]))
 *)
+
+(* All code should be before the 'end' *)
+end
