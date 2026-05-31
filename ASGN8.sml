@@ -25,6 +25,14 @@ struct
 
 val reserved = ["if", "=", "given", "fn", "->", "do"]
 
+datatype Sexp =
+    Symbol of string
+    | Num of real
+    | String of string
+    | List of Sexp list;
+
+
+
 (* datatype definitions for the VEBG4 AST *)
 datatype ExprC = 
     NumC of { n: real }
@@ -95,6 +103,61 @@ val top_env = [
                         | _ => raise Fail "VEBG: error called incorrectly" })
 ]
 
+datatype Token =
+    LPrend (* ( *)
+    | RPrend (* ) *)
+    | TokNum of real
+    | TokStr of string
+    | TokId of string
+
+(* Helper to consume characters while a condition is met *)
+(* First list is elements before the predicate is met, and second list is the rest*)
+fun takeWhile pred [] = ([], [])
+  | takeWhile pred (x::xs) =
+        if pred x then
+            let val (taken, rest) = takeWhile pred xs
+            in (x::taken, rest) end
+        else
+            ([], x::xs)
+
+fun lex [] = []
+    | lex (#"(" :: cs) = LPrend :: lex cs
+    | lex (#")" :: cs) = RPrend :: lex cs
+    | lex (#" " :: cs)  = lex cs
+    | lex (#"\t" :: cs) = lex cs
+    | lex (#"\n" :: cs) = lex cs
+    (* Strings *)
+    | lex (#"\"" :: cs) =
+            let val (strChars, rest) = takeWhile (fn c => c <> #"\"") cs
+            in case rest of
+                #"\"" :: remaining => TokStr (String.implode strChars) :: lex remaining
+                | _ => raise Fail "VEBG: Lexer Error: Unterminated string literal"
+            end
+    (* Numbers *)
+    | lex (c::cs) =
+        if Char.isDigit c orelse  (c = #"-" andalso case cs of (d::_) => Char.isDigit d
+                                                            | _ => false) then
+            let
+                val (numChars, rest) = takeWhile (fn x => Char.isDigit x orelse x = #".") cs
+                val fullNumStr = implode (c :: numChars) (* Convert th elist of chars for the number to a string *)
+            in
+                case Real.fromString fullNumStr of
+                SOME r => TokNum r :: lex rest
+                | NONE => raise  Fail ("VEBG: Lexer Error: Invalid number layout " ^ fullNumStr)
+            end
+        (* Symbols (isGraph is basically is it a normal, non-whitespace character) *)
+        else if Char.isGraph c then
+            let
+                val (idChars, rest) = takeWhile (fn x => x <> #"(" andalso x <> #")" andalso x <> #" " andalso x <> #"\t" andalso x <> #"\n") cs
+                val idStr = implode (c :: idChars)
+            in
+                TokId idStr :: lex rest
+            end
+        else
+            raise Fail ("VEBG: Lexer Error: Unexpected character: " ^ String.str c)
+
+fun lex_string s = lex (String.explode(s))
+
 (* Whether the target value is in the list *)
 fun contains target [] = false
   | contains target (x::xs) = (target = x) orelse contains target xs;
@@ -102,6 +165,11 @@ fun contains target [] = false
 (* Whether a given list has any duplicates: Use in Parser to check that a LamC has no duplicate params *)
 fun hasDuplicates [] = false
   | hasDuplicates (x::xs) = (contains x xs) orelse hasDuplicates xs
+
+(* TODO: Add all clauses of the parser *)
+fun parse (Num n) = (NumV n)
+    (* | parse .... *)
+
 
 (* lookup is a recursive function that checks through a list searching
 for the proper value associated with the given id *)
@@ -117,6 +185,7 @@ fun add_to_env [] [] env = env
 
 (* the interp function acts like a large match statement with each
 case representing a variation of interp and what the output would be given the env *)
+(* env comes first in the arguments so that you can curry it and create a interp-with-a-given-env function *)
 fun interp env (NumC { n = n }) = NumV n
     | interp env (StrC { s = s }) = StrV s
     | interp env (IdC { id = id }) = lookup id env
