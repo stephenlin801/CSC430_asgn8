@@ -169,9 +169,41 @@ fun contains target [] = false
 fun hasDuplicates [] = false
   | hasDuplicates (x::xs) = (contains x xs) orelse hasDuplicates xs
 
-(* TODO: Add all clauses of the parser *)
-fun parse (Num n) = (NumV n)
-    (* | parse .... *)
+(* Grabs first element of a list for extracting the AST from parseExpr
+    The parseExpr returns [AST, tokens] recursively but the tokens should be empty by the end *)
+fun fst (x, _) = x
+
+(* parses a singular expression of tokens into an ExprC*)
+fun parseExpr tokens =
+    case tokens of
+
+        TokNum n :: rest => (NumC {n=n}, rest)
+        | TokStr s :: rest => (StrC {s=s}, rest)
+        | TokId id :: rest => (IdC {id=id}, rest)
+
+        | LParen :: rest =>
+            let
+                val (f, rest1) = parseExpr rest
+                val (args, rest2) = parseMany rest1
+            in
+                (AppC {f=f, args=args}, rest2)
+            end
+        | _ => raise Fail "parse error"
+(* parses many expressions of tokens (mainly the args list for AppC) *)
+and parseMany tokens =
+    case tokens of
+        RParen :: rest => ([], rest)
+
+        | _ =>
+            let 
+                val (e, rest1) = parseExpr tokens
+                val (es, rest2) = parseMany rest1
+            in
+                (e :: es, rest2)
+            end
+
+(* converts a string into tokens and then parses the tokens into an ExprC *)
+fun parse (prog : string) = fst (parseExpr (lex_string prog))
 
 
 (* lookup is a recursive function that checks through a list searching

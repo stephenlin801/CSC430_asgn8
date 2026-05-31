@@ -15,6 +15,23 @@ fun checkTokenEqual (LParen, LParen) = true
 fun checkAllTokensEqual ([], []) = true
     | checkAllTokensEqual ((t1::t1s), (t2::t2s)) = checkTokenEqual (t1, t2) andalso checkAllTokensEqual (t1s, t2s)
 
+(* ExprC equality helper function *)
+fun checkExprEqual (NumC {n=a}, NumC {n=b}) = Real.abs (a - b) < 0.00001
+    | checkExprEqual (StrC {s=a}, StrC{s=b}) = (a = b)
+    | checkExprEqual (IdC {id=a}, IdC {id=b}) = (a = b)
+    | checkExprEqual (IfC {cond=c1, thenBody=t1, elseBody=e1}, IfC {cond=c2, thenBody=t2, elseBody=e2}) =
+                     checkExprEqual (c1, c2)
+                     andalso checkExprEqual (t1, t2)
+                     andalso checkExprEqual (e1, e2)
+    | checkExprEqual (LamC {params=p1, body=b1}, LamC {params=p2, body=b2}) =
+                      (p1 = p2)
+                      andalso checkExprEqual (b1, b2)
+    | checkExprEqual (AppC {f=f1, args=a1}, AppC {f=f2, args=a2}) =
+                      checkExprEqual (f1, f2)
+                      andalso List.all (fn (x,y) => checkExprEqual (x, y)) (ListPair.zip (a1, a2))
+    | checkExprEqual _ = false
+
+
 (* Value equality helper function to bypass the 'real' equality restriction *)
     fun checkValEqual (NumV a, NumV b) = Real.abs (a - b) < 0.00001
       | checkValEqual (StrV a, StrV b) = (a = b)
@@ -49,6 +66,19 @@ val _ = assert("Complex lexing",
                 checkAllTokensEqual (lex_string "(x (y \"hi\"  3) () )", 
                     [LParen, TokId "x", LParen, TokId "y", TokStr "hi", TokNum 3.0, RParen, LParen, RParen, RParen]))
 (* TODO: Add more lexer tests *)
+
+
+val _ = print "--- Parser tests ---\n"
+
+val _ = assert ("Parse into NumC",
+                 checkExprEqual (parse "3", (NumC { n = 3.0})))
+val _ = assert ("Parse into StrC",
+                 checkExprEqual (parse "\"hello\"", (StrC { s = "hello"})))
+val _ = assert ("Parse into IdC",
+                 checkExprEqual (parse "x", (IdC { id = "x" })))
+val _ = assert ("Parse into AppC",
+                 checkExprEqual (parse "(+ 1 2)", (AppC { f = (IdC { id = "+" }), args = [NumC { n = 1.0 }, NumC { n = 2.0 }] })))
+
 
 val _ = print "--- Interpreter tests ---\n"
 
