@@ -205,8 +205,12 @@ fun interp env (NumC { n = n }) = NumV n
                                                 | (PrimV {f = f}) => f (List.map (interp env) args))
 
 
-
-
+(* Converts interpreted value into string *)
+fun serialize (NumV n) = Real.toString n
+    | serialize (StrV s) = "\"" ^ s ^ "\""
+    | serialize (BoolV b) = if b then "true" else "false"
+    | serialize (CloV _) = "#<procedure>"
+    | serialize (PrimV _) = "#<primop>"
 
 
 (*

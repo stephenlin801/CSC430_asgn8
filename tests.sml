@@ -98,5 +98,19 @@ val _ = assert ("AppC evaluation - equal?",
 val _ = assert ("AppC evaluation - equal?", 
                  checkValEqual (interp top_env (appC ((idC "equal?"), [(idC "false"), (idC "false")])), BoolV true));
 
+
+val _ = print "--- Serialize tests ---\n"
+
+val _ = assert ("NumV evaluation",
+                 serialize (interp top_env (numC 5.1)) = "5.1")
+val _ = assert ("StrV evaluation",
+                 serialize (interp top_env (strC "hello")) = "\"hello\"")
+val _ = assert ("BoolV evaluation",
+                 serialize (interp top_env (idC "true")) = "true")
+val _ = assert ("CloV evaluation",
+                 serialize (interp top_env (lamC (["x"], idC "x"))) = "#<procedure>")
+val _ = assert ("PrimV evaluation",
+                 serialize (interp top_env (idC "+")) = "#<primop>")
+
 (* Make sure all tests are before 'end' *)
 end
