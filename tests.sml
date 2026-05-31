@@ -142,5 +142,45 @@ val _ = assert ("CloV evaluation",
 val _ = assert ("PrimV evaluation",
                  serialize (interp top_env (idC "+")) = "#<primop>")
 
+
+val _ = print "--- Top_Interp tests ---\n"
+
+val _ = assert ("Number evalutation",
+                 top_interp "5.1" = "5.1")
+val _ = assert ("String evalutation",
+                 top_interp "\"hello\"" = "\"hello\"")
+val _ = assert ("Boolean evalutation",
+                 top_interp "true" = "true")             
+val _ = assert ("Function Application - +",
+                 top_interp "(+ 5 2)" = "7")
+val _ = assert ("Function Application - +",
+                 top_interp "(+ 5 2)" = "7")
+val _ = assert ("Function Application - +",
+                 top_interp "(+ 5 2)" = "7")
+val _ = assert ("Function Application - -",
+                 top_interp "(- 5 2)" = "3")
+val _ = assert ("Function Application - *",
+                 top_interp "(* 5 2)" = "10")
+val _ = assert ("Function Application - /",
+                 top_interp "(/ 5 2)" = "2.5")
+val _ = assert ("Function Application - <=",
+                 top_interp "(<= 5 2)" = "false")
+val _ = assert ("Function Application - <=",
+                 top_interp "(<= 2 5)" = "true")
+val _ = assert ("Function Application - <=",
+                 top_interp "(<= 2 5)" = "true")
+val _ = assert ("Function Application - substring",
+                 top_interp "(substring \"hello\" 0 3)" = "\"hel\"")
+val _ = assert ("Function Application - substring",
+                 top_interp "(substring \"hello world\" 6 10)" = "\"worl\"")
+val _ = assert ("Function Application - equal?",
+                 top_interp "(equal? 4 4)" = "true")
+val _ = assert ("Function Application - equal?",
+                 top_interp "(equal? 5 4)" = "false")
+val _ = assert ("Function Application - equal?",
+                 top_interp "(equal? \"hello world\" \"hello world\")" = "true")
+val _ = assert ("Function Application - equal?",
+                 top_interp "(equal? \"hello world\" \"hello\")" = "false")
+
 (* Make sure all tests are before 'end' *)
 end

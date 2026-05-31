@@ -9,6 +9,10 @@ function and the pattern matches for NumC, StrC, IdC, and IfC *)
 (* Tyler: I created the testing file. I finished the appc and lamc clauses fo the interpreter. 
     I also create the Token datatypes and the lexer. I also made the contains and hasDuplicates functions.*)
 
+(* Bobby: I added the serialize function. I also created the parser with helper functions to construct the AST from Tyler's tokens.
+    I added a test helper function to check for equality of ASTs and used it in the parser tests. Lastly, I made the top-interp function
+    to parse, interpret, and serialize a string that acts as our program. I added test cases for all of this. *)
+
 (* 
 To compile and run code:
     1. Install SML-NJ from https://www.smlnj.org/dist/working/110.99.9/index.html
@@ -173,6 +177,9 @@ fun hasDuplicates [] = false
     The parseExpr returns [AST, tokens] recursively but the tokens should be empty by the end *)
 fun fst (x, _) = x
 
+
+(* TODO: adjust parse clauses to handle IfC and LamC (right now it only does NumC StrC IdC and AppC) *)
+
 (* parses a singular expression of tokens into an ExprC*)
 fun parseExpr tokens =
     case tokens of
@@ -243,6 +250,15 @@ fun serialize (NumV n) = Real.toString n
     | serialize (BoolV b) = if b then "true" else "false"
     | serialize (CloV _) = "#<procedure>"
     | serialize (PrimV _) = "#<primop>"
+
+
+(* Runs the given program
+    Converts string to tokens with the lexer
+    Converts tokens to ExprC with parser
+    Converts ExprC to Value with interpreter
+    Converts Value to String with serialize *)
+fun top_interp (s : string) =
+    serialize (interp top_env (parse s))
 
 
 (*
