@@ -122,6 +122,7 @@ fun takeWhile pred [] = ([], [])
         else
             ([], x::xs)
 
+(* Potentially add specific clauses for keywords such as 'fn' and 'given *)
 fun lex [] = []
     | lex (#"(" :: cs) = LParen :: lex cs
     | lex (#")" :: cs) = RParen :: lex cs
