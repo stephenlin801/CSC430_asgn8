@@ -45,6 +45,7 @@ datatype ExprC =
         IfC { cond = IdC { id = "true"},
             thenBody = StrC { s = "hello" },
             elseBody = NumC { n = 5.0 }  })
+    !!! These won't work for match patterns, for those you have to do them the long way.
     *)
 fun numC n = NumC { n = n }
 fun idC id = IdC { id = id }
@@ -59,6 +60,9 @@ datatype Value =
     | StrV of string
     | PrimV of { f: Value list -> Value}
     | CloV of { params: string list, body: ExprC, env: (string * Value) list}
+
+fun primV f = PrimV {f = f}
+fun cloV (p : string list, b, e) = CloV { params = p, body = b, env = e }
 
 (* top environment containing primitives *)
 val top_env = [
@@ -91,6 +95,14 @@ val top_env = [
                         | _ => raise Fail "VEBG: error called incorrectly" })
 ]
 
+(* Whether the target value is in the list *)
+fun contains target [] = false
+  | contains target (x::xs) = (target = x) orelse contains target xs;
+
+(* Whether a given list has any duplicates: Use in Parser to check that a LamC has no duplicate params *)
+fun hasDuplicates [] = false
+  | hasDuplicates (x::xs) = (contains x xs) orelse hasDuplicates xs
+
 (* lookup is a recursive function that checks through a list searching
 for the proper value associated with the given id *)
 fun lookup (id : string) [] = raise Fail "VEBG: name not found"
@@ -99,17 +111,28 @@ fun lookup (id : string) [] = raise Fail "VEBG: name not found"
         then value
         else lookup id rest
 
+(* Add a given id-value binding list to the env (returning the new env) *)
+fun add_to_env [] [] env = env
+    | add_to_env (id::id_r) (value::value_r) env = add_to_env id_r value_r ((id, value)::env)
+
 (* the interp function acts like a large match statement with each
 case representing a variation of interp and what the output would be given the env *)
-fun interp (NumC { n = n }) env = NumV n
-    | interp (StrC { s = s }) env = StrV s
-    | interp (IdC { id = id }) env = lookup id env
-    | interp (IfC { cond = cond, thenBody = thenBody, elseBody = elseBody }) env = case interp cond env of
-                                                    BoolV true => interp thenBody env
-                                                    | BoolV false => interp elseBody env
-                                                    | _ => raise Fail "VEBG: interp, need boolean for if"
-    (* | interp (LamC { params = params }) env = 
-    | interp (AppC { f = f, args = aargs}) env =  *)
+fun interp env (NumC { n = n }) = NumV n
+    | interp env (StrC { s = s }) = StrV s
+    | interp env (IdC { id = id }) = lookup id env
+    | interp env (IfC { cond = cond, thenBody = thenBody, elseBody = elseBody }) = (case interp env cond of
+                                                    BoolV true => interp env thenBody
+                                                    | BoolV false => interp env elseBody
+                                                    | _ => raise Fail "VEBG: interp, need boolean for if")
+    | interp env (LamC { params = params, body = body }) = cloV (params, body, env)
+    | interp env (AppC { f = f, args = args}) = (case interp env f of
+                                                (CloV {params, body, env}) => interp (add_to_env params 
+                                                                                        (List.map (interp env) args)
+                                                                                        env) 
+                                                                                    body
+                                                | (PrimV {f = f}) => f (List.map (interp env) args))
+
+
 
 
 

@@ -6,7 +6,7 @@ struct
 open ASGN8
 
 (* Value equality helper function to bypass the 'real' equality restriction *)
-    fun checkValEqual (NumV a, NumV b) = Real.== (a, b)
+    fun checkValEqual (NumV a, NumV b) = Real.abs (a - b) < 0.00001
       | checkValEqual (StrV a, StrV b) = (a = b)
       | checkValEqual (BoolV a, BoolV b) = (a = b)
       | checkValEqual _ = false (* Handles mismatched types or PrimV/CloV *)
@@ -14,22 +14,52 @@ open ASGN8
     
     fun assert (msg, true) = print ("PASS: " ^ msg ^ "\n")
       | assert (msg, false) = raise Fail ("FAIL: " ^ msg)
-
+(* TODO: Add a way for checking for errors *)
 val _ = print "Running tests...\n"
 
 val _ = assert ("NumC evaluation", 
-                 checkValEqual (interp (NumC { n = 5.0 }) [], NumV 5.0));
+                 checkValEqual (interp top_env (NumC { n = 5.0 }), NumV 5.0));
 
 val _ = assert ("StrC evaluation", 
-                 checkValEqual (interp (StrC { s = "hello" }) [], StrV "hello"));
+                 checkValEqual (interp top_env (StrC { s = "hello" }), StrV "hello"));
 val _ = assert ("BoolC evaluation", 
-                 checkValEqual (interp (IdC { id = "true" }) top_env, BoolV true));
+                 checkValEqual (interp top_env (IdC { id = "true" }), BoolV true));
 val _ = assert ("IfC evaluation - true branch", 
-                 checkValEqual (interp (ifC (idC "true", strC "hello", numC 5.0)) top_env, StrV "hello"));
+                 checkValEqual (interp top_env (ifC (idC "true", strC "hello", numC 5.0)), StrV "hello"));
 
 val _ = assert ("IfC evaluation - false branch", 
-                 checkValEqual (interp (ifC (idC "false", strC "hello", numC 5.0)) top_env, NumV 5.0));
+                 checkValEqual (interp top_env (ifC (idC "false", strC "hello", numC 5.0)), NumV 5.0));
+val _ = assert ("AppC evaluation - CloV", 
+                 checkValEqual (interp top_env (appC (lamC (["x"], idC "x"), [(numC 1.1)])), NumV 1.1)); 
+val _ = assert ("AppC evaluation - +", 
+                 checkValEqual (interp top_env (appC ((idC "+"), [(numC 1.1), (numC 2.0)])), NumV 3.1));
+val _ = assert ("AppC evaluation - -", 
+                 checkValEqual (interp top_env (appC ((idC "-"), [(numC 1.1), (numC 2.0)])), NumV ~0.9));
+val _ = assert ("AppC evaluation - *", 
+                 checkValEqual (interp top_env (appC ((idC "*"), [(numC 1.1), (numC 2.0)])), NumV 2.2));
+val _ = assert ("AppC evaluation - /", 
+                 checkValEqual (interp top_env (appC ((idC "/"), [(numC 1.1), (numC 2.0)])), NumV 0.55));
+val _ = assert ("AppC evaluation - <=", 
+                 checkValEqual (interp top_env (appC ((idC "<="), [(numC 1.1), (numC 2.0)])), BoolV true));
+val _ = assert ("AppC evaluation - <=", 
+                 checkValEqual (interp top_env (appC ((idC "<="), [(numC 6.1), (numC 2.0)])), BoolV false));
+val _ = assert ("AppC evaluation - substring", 
+                 checkValEqual (interp top_env (appC ((idC "substring"), [(strC "hello"), (numC 2.0), (numC 5.0)])), StrV "llo"));
 
+val _ = assert ("AppC evaluation - equal?", 
+                 checkValEqual (interp top_env (appC ((idC "equal?"), [(numC 2.0), (numC 5.0)])), BoolV false));
+val _ = assert ("AppC evaluation - equal?", 
+                 checkValEqual (interp top_env (appC ((idC "equal?"), [(numC 2.0), (numC 2.0)])), BoolV true));
+val _ = assert ("AppC evaluation - equal?", 
+                 checkValEqual (interp top_env (appC ((idC "equal?"), [(strC "hi"), (strC "hi")])), BoolV true));
+val _ = assert ("AppC evaluation - equal?", 
+                 checkValEqual (interp top_env (appC ((idC "equal?"), [(strC "hi"), (strC "hello")])), BoolV false));
+val _ = assert ("AppC evaluation - equal?", 
+                 checkValEqual (interp top_env (appC ((idC "equal?"), [(idC "true"), (idC "true")])), BoolV true));
+val _ = assert ("AppC evaluation - equal?", 
+                 checkValEqual (interp top_env (appC ((idC "equal?"), [(idC "false"), (idC "true")])), BoolV false));
+val _ = assert ("AppC evaluation - equal?", 
+                 checkValEqual (interp top_env (appC ((idC "equal?"), [(idC "false"), (idC "false")])), BoolV true));
 
 (* Make sure all tests are before 'end' *)
 end
