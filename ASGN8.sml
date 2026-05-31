@@ -6,6 +6,9 @@
 functions representing the primitive types. In addition, I started the interp creating the lookup helper 
 function and the pattern matches for NumC, StrC, IdC, and IfC *)
 
+(* Tyler: I created the testing file. I finished the appc and lamc clauses fo the interpreter. 
+    I also create the Token datatypes and the lexer. I also made the contains and hasDuplicates functions.*)
+
 (* 
 To compile and run code:
     1. Install SML-NJ from https://www.smlnj.org/dist/working/110.99.9/index.html
@@ -25,13 +28,12 @@ struct
 
 val reserved = ["if", "=", "given", "fn", "->", "do"]
 
+(* Currently unused, just a suggestion for an intermediary step between tokesn and Exprc's *)
 datatype Sexp =
     Symbol of string
     | Num of real
     | String of string
     | List of Sexp list;
-
-
 
 (* datatype definitions for the VEBG4 AST *)
 datatype ExprC = 
