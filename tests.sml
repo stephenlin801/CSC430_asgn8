@@ -5,8 +5,8 @@ struct
 (* Import everything from ASGN8 *)
 open ASGN8
 
-fun checkTokenEqual (LPrend, LPrend) = true
-  | checkTokenEqual (RPrend, RPrend) = true
+fun checkTokenEqual (LParen, LParen) = true
+  | checkTokenEqual (RParen, RParen) = true
   | checkTokenEqual (TokNum n1, TokNum n2) = Real.== (n1, n2)
   | checkTokenEqual (TokStr s1, TokStr s2) = (s1 = s2)
   | checkTokenEqual (TokId id1, TokId id2) = (id1 = id2)
@@ -24,10 +24,12 @@ fun checkAllTokensEqual ([], []) = true
     
     fun assert (msg, true) = print ("PASS: " ^ msg ^ "\n")
       | assert (msg, false) = raise Fail ("FAIL: " ^ msg)
+
 (* TODO: Add a way for checking for errors *)
+
 val _ = print "Running tests...\n"
 
-val _ = print "Lexer tests"
+val _ = print "--- Lexer tests --- \n"
 
 val _ = assert("Number lexing",
                 checkAllTokensEqual (lex_string "3", [TokNum 3.0]))
@@ -37,9 +39,18 @@ val _ = assert("Number lexing",
                 checkAllTokensEqual (lex_string "3.05", [TokNum 3.05]))
 val _ = assert("Number lexing",
                 checkAllTokensEqual (lex_string "-3", [TokNum ~3.0]))
-(* TODO: Add mroe lexer tests *)
+val _ = assert("String lexing",
+                checkAllTokensEqual (lex_string "\"hello world\"", [TokStr "hello world"]))
+val _ = assert("Paren lexing",
+                checkAllTokensEqual (lex_string "()())(", [LParen, RParen, LParen, RParen, RParen, LParen]))
+val _ = assert("Id lexing",
+                checkAllTokensEqual (lex_string "x y z", [TokId "x", TokId "y", TokId "z"]))
+val _ = assert("Complex lexing",
+                checkAllTokensEqual (lex_string "(x (y \"hi\"  3) () )", 
+                    [LParen, TokId "x", LParen, TokId "y", TokStr "hi", TokNum 3.0, RParen, LParen, RParen, RParen]))
+(* TODO: Add more lexer tests *)
 
-val _ = print "Interpreter tests\n"
+val _ = print "--- Interpreter tests ---\n"
 
 val _ = assert ("NumC evaluation", 
                  checkValEqual (interp top_env (NumC { n = 5.0 }), NumV 5.0));
@@ -55,6 +66,8 @@ val _ = assert ("IfC evaluation - false branch",
                  checkValEqual (interp top_env (ifC (idC "false", strC "hello", numC 5.0)), NumV 5.0));
 val _ = assert ("AppC evaluation - CloV", 
                  checkValEqual (interp top_env (appC (lamC (["x"], idC "x"), [(numC 1.1)])), NumV 1.1)); 
+val _ = assert ("AppC evaluation - CloV", 
+                 checkValEqual (interp top_env (appC (lamC (["x"], appC (idC "*", [idC "x", idC "x"])), [(numC 10.0)])), NumV 100.0)); 
 val _ = assert ("AppC evaluation - +", 
                  checkValEqual (interp top_env (appC ((idC "+"), [(numC 1.1), (numC 2.0)])), NumV 3.1));
 val _ = assert ("AppC evaluation - -", 

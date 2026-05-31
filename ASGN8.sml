@@ -104,8 +104,8 @@ val top_env = [
 ]
 
 datatype Token =
-    LPrend (* ( *)
-    | RPrend (* ) *)
+    LParen (* ( *)
+    | RParen (* ) *)
     | TokNum of real
     | TokStr of string
     | TokId of string
@@ -121,8 +121,8 @@ fun takeWhile pred [] = ([], [])
             ([], x::xs)
 
 fun lex [] = []
-    | lex (#"(" :: cs) = LPrend :: lex cs
-    | lex (#")" :: cs) = RPrend :: lex cs
+    | lex (#"(" :: cs) = LParen :: lex cs
+    | lex (#")" :: cs) = RParen :: lex cs
     | lex (#" " :: cs)  = lex cs
     | lex (#"\t" :: cs) = lex cs
     | lex (#"\n" :: cs) = lex cs
