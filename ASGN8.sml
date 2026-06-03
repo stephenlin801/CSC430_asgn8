@@ -32,13 +32,6 @@ struct
 
 val reserved = ["if", "=", "given", "fn", "->", "do"]
 
-(* Currently unused, just a suggestion for an intermediary step between tokesn and Exprc's *)
-datatype Sexp =
-    Symbol of string
-    | Num of real
-    | String of string
-    | List of Sexp list;
-
 (* datatype definitions for the VEBG4 AST *)
 datatype ExprC = 
     NumC of { n: real }
