@@ -254,42 +254,6 @@ fun top_interp (s : string) =
     serialize (interp top_env (parse s))
 
 
-(*
-
-interp logic is based off the racket code below if it helps
-
-(define (lookup [for : Symbol] [env : Env]) : Value
-  (match env
-    ['() (error 'lookup "VEBG: name not found: ~e" for)]
-    [(cons (Binding name val) r) (cond
-                                   [(symbol=? for name) val]
-                                   [else (lookup for r)])]))
-
-;; interp takes an ExprC and an Env and returns the Value that
-;; ExprC evaluates to using the Env to apply Values to variable names
-(define (interp [e : ExprC] [env : Env]) : Value
-  (match e
-    [(numC n) n]
-    [(idC a) (lookup a env)]
-    [(strC s) s]
-    [(lamC p b) (cloV p b env)]
-    [(appC f a) (let ([fi (interp f env)]
-                      [ai (map (lambda ([arg : ExprC]) (interp arg env)) a)])
-                  (cond
-                    [(cloV? fi)
-                     (if (not (= (length (cloV-params fi)) (length ai)))
-                         (error 'interp "VEBG: wrong arity")
-                         (interp (cloV-body fi) (append (map Binding (cloV-params fi) ai) (cloV-env fi))))]
-                    [(primV? fi)
-                     ((primV-f fi) ai)]
-                    [else (error 'interp "VEBG: tried to apply non-function")]))]
-    [(ifC a b c) (let ([result (interp a env)])
-                   (cond
-                     [(not (boolean? result))
-                      (error 'interp "VEBG: if conditional not boolean")]
-                     [result (interp b env)]
-                     [else (interp c env)]))]))
-*)
 
 (* All code should be before the 'end' *)
 end
