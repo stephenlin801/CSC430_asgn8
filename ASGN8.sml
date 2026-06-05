@@ -173,8 +173,6 @@ fun hasDuplicates [] = false
 fun fst (x, _) = x
 
 
-(* TODO: adjust parse clauses to handle IfC and LamC (right now it only does NumC StrC IdC and AppC) *)
-
 (* parses a singular expression of tokens into an ExprC*)
 fun parseExpr tokens =
     case tokens of
