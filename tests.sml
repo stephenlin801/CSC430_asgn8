@@ -78,7 +78,36 @@ val _ = assert ("Parse into IdC",
                  checkExprEqual (parse "x", (IdC { id = "x" })))
 val _ = assert ("Parse into AppC",
                  checkExprEqual (parse "(+ 1 2)", (AppC { f = (IdC { id = "+" }), args = [NumC { n = 1.0 }, NumC { n = 2.0 }] })))
-
+val _ = assert ("Parse into IfC",
+    checkExprEqual (
+        parse "(if x y z)",
+        IfC { cond = IdC { id = "x" },
+              thenBody = IdC { id = "y" },
+              elseBody = IdC { id = "z" } }
+    ))
+val _ = assert ("Parse into nested IfC",
+    checkExprEqual (
+        parse "(if x (if y 1 0) 9)",
+        IfC { cond = IdC { id = "x" },
+              thenBody = IfC { cond = IdC { id = "y" },
+                                thenBody = NumC { n = 1.0 },
+                                elseBody = NumC { n = 0.0 } },
+              elseBody = NumC { n = 9.0 } }
+    ))
+val _ = assert ("Parse into LamC",
+    checkExprEqual (
+        parse "(fn (x) -> x)",
+        LamC { params = ["x"],
+                body = IdC { id = "x" } }
+    ))
+val _ = assert ("Parse into LamC (more than one param)",
+    checkExprEqual (
+        parse "(fn (x y z) -> (+ x y))",
+        LamC { params = ["x","y","z"],
+                body = AppC { f = IdC { id = "+" },
+                args = [IdC { id = "x" },
+                IdC { id = "y" }] } }
+    ))
 
 val _ = print "--- Interpreter tests ---\n"
 

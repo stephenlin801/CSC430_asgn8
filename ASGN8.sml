@@ -13,6 +13,8 @@ function and the pattern matches for NumC, StrC, IdC, and IfC *)
     I added a test helper function to check for equality of ASTs and used it in the parser tests. Lastly, I made the top-interp function
     to parse, interpret, and serialize a string that acts as our program. I added test cases for all of this. *)
 
+(* Thomas: I added parsing of tokens to IfCs and LamCs, and test cases for them. *)
+
 (* 
 To compile and run code:
     1. Install SML-NJ from https://www.smlnj.org/dist/working/110.99.9/index.html
@@ -187,6 +189,41 @@ fun parseExpr tokens =
                 val (args, rest2) = parseMany rest1
             in
                 (AppC {f=f, args=args}, rest2)
+            end
+        | LParen :: TokId "if" :: rest =>
+            let
+                val (cond, rest1) = parseExpr rest
+                val (thenE, rest2) = parseExpr rest1
+                val (elseE, rest3) = parseExpr rest2
+            in
+                (IfC {cond=cond, thenBody=thenE, elseBody=elseE}, rest3)
+            end
+        | LParen :: TokId "fn" :: LParen :: rest =>
+        (* Note: fn case written with refernece to a skeleton provided by GenAI (Microsoft Copilot) *)
+            let
+                fun parseParams tokens =
+                    case tokens of
+                        RParen :: fnrest1 => ([], fnrest1)
+                    | TokId x :: fnrest1 =>
+                            let val (xs, fnrest2) = parseParams fnrest1
+                            in 
+                                (x :: xs, fnrest2) 
+                            end
+                    | _ => raise Fail "VEBG: invalid parameter list in fn in: " ^ tokens
+                val (params, rest1) = parseParams rest
+
+                val rest2 =
+                    case rest1 of
+                        TokId "->" :: r => r
+                    | _ => raise Fail "VEBG: expected -> in fn in: " ^ tokens
+
+                (* parse body *)
+                val (body, rest3) = parseExpr rest2
+
+            in
+                case rest3 of
+                    RParen :: rest4 => (LamC {params=params, body=body}, rest4)
+                | _ => raise Fail "VEBG: expected ) after fn in: " ^ tokens
             end
         | _ => raise Fail "parse error"
 (* parses many expressions of tokens (mainly the args list for AppC) *)
